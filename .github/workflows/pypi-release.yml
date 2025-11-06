@@ -163,11 +163,10 @@ jobs:
           sudo apt-get install -y libmagic1
 
       - name: Install rye
-        env:
-          RYE_INSTALL_OPTION: --yes
         run: |
-          curl -sSf https://rye.astral.sh/get | bash < /dev/null
-          $HOME/.rye/shims/rye --version
+          curl -sSf https://rye.astral.sh/get | bash -s -- --yes
+          export PATH="$HOME/.rye/shims:$PATH"
+          rye --version
 
       - name: Install dependencies
         run: $HOME/.rye/shims/rye sync

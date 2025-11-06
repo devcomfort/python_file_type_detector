@@ -11,6 +11,7 @@ dependencies = [
     "magika>=1.0.1",
     "pytest>=8.4.2",
     "loguru>=0.7.3",
+    "mkdocs>=1.6.1",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -36,7 +37,9 @@ dev = [
 ]
 docs = [
     "mkdocs>=1.6.1",
+    "mkdocs-material>=9.5.0",
     "mkdocstrings[python]>=0.24.0",
+    "pymdown-extensions>=10.0.0",
 ]
 
 [build-system]
@@ -48,6 +51,9 @@ managed = true
 dev-dependencies = [
     "build>=1.3.0",
     "twine>=6.2.0",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.23",
+    "pymdown-extensions>=10.16.1",
 ]
 
 [tool.hatch.metadata]

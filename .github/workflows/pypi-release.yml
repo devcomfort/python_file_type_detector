@@ -164,48 +164,29 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install and verify rye
+      - name: Install and setup rye
         run: |
-          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null || curl -sSf https://rye.astral.sh/get | bash < /dev/null
-          export PATH="$HOME/.rye/shims:$PATH"
+          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
-          # Verify installation in same step
+          # Setup rye environment for subsequent steps
           if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
+            cat "$HOME/.rye/env" >> $GITHUB_ENV
           fi
-          rye --version || $HOME/.rye/shims/rye --version
+          # Verify installation
+          export PATH="$HOME/.rye/shims:$PATH"
+          rye --version
 
       - name: Install dependencies
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
-          fi
-          rye sync
+        run: rye sync
 
       - name: Run tests
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
-          fi
-          rye run pytest tests/ -v
+        run: rye run pytest tests/ -v
 
       - name: Build package
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
-          fi
-          rye run python -m build
+        run: rye run python -m build
 
       - name: Check package
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
-          fi
-          rye run twine check dist/*
+        run: rye run twine check dist/*
 
 
   release-to-testpypi:
@@ -230,38 +211,25 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install rye
+      - name: Install and setup rye
         run: |
-          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null || curl -sSf https://rye.astral.sh/get | bash < /dev/null
-          export PATH="$HOME/.rye/shims:$PATH"
+          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
+          if [ -f "$HOME/.rye/env" ]; then
+            cat "$HOME/.rye/env" >> $GITHUB_ENV
+          fi
 
       - name: Install dependencies
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
-          fi
-          rye sync
+        run: rye sync
 
       - name: Build package
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
-          fi
-          rye run python -m build
+        run: rye run python -m build
 
       - name: Publish to TestPyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TESTPYPI_API_TOKEN }}
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
-          fi
-          rye run twine upload --repository testpypi dist/* --verbose
+        run: rye run twine upload --repository testpypi dist/* --verbose
 
       - name: Verify TestPyPI installation
         run: |
@@ -282,38 +250,25 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install rye
+      - name: Install and setup rye
         run: |
-          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null || curl -sSf https://rye.astral.sh/get | bash < /dev/null
-          export PATH="$HOME/.rye/shims:$PATH"
+          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
+          if [ -f "$HOME/.rye/env" ]; then
+            cat "$HOME/.rye/env" >> $GITHUB_ENV
+          fi
 
       - name: Install dependencies
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
-          fi
-          rye sync
+        run: rye sync
 
       - name: Build package
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
-          fi
-          rye run python -m build
+        run: rye run python -m build
 
       - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
-          fi
-          rye run twine upload dist/* --verbose
+        run: rye run twine upload dist/* --verbose
 
       - name: Install GitHub CLI
         run: |

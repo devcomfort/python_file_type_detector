@@ -163,28 +163,35 @@ jobs:
           sudo apt-get install -y libmagic1
 
       - name: Install rye
+        run: curl -sSf https://rye.astral.sh/get | bash -s -- --yes
+
+      - name: Load rye environment
         run: |
-          curl -sSf https://rye.astral.sh/get | bash -s -- --yes
-          export PATH="$HOME/.rye/shims:$PATH"
-          rye --version
+          echo "$HOME/.rye/shims" >> $GITHUB_PATH
+          if [ -f "$HOME/.rye/env" ]; then
+            cat "$HOME/.rye/env" >> $GITHUB_ENV
+          fi
+
+      - name: Verify rye installation
+        run: rye --version
 
       - name: Install dependencies
-        run: $HOME/.rye/shims/rye sync
+        run: rye sync
 
       - name: Run tests
-        run: $HOME/.rye/shims/rye run pytest tests/ -v
+        run: rye run pytest tests/ -v
 
       - name: Build package
-        run: $HOME/.rye/shims/rye run python -m build
+        run: rye run python -m build
 
       - name: Check package
-        run: $HOME/.rye/shims/rye run twine check dist/*
+        run: rye run twine check dist/*
 
       - name: Publish to TestPyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TESTPYPI_API_TOKEN }}
-        run: $HOME/.rye/shims/rye run twine upload --repository testpypi dist/* --verbose
+        run: rye run twine upload --repository testpypi dist/* --verbose
 
       - name: Verify TestPyPI installation
         run: |
@@ -194,7 +201,7 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: $HOME/.rye/shims/rye run twine upload dist/* --verbose
+        run: rye run twine upload dist/* --verbose
 
       - name: Install GitHub CLI
         run: |

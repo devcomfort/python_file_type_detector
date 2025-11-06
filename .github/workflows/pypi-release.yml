@@ -87,6 +87,22 @@ jobs:
               OLD_VERSION="$CURRENT_VERSION"
               SHOULD_RELEASE="true"
               IS_SEMANTIC="true"
+            else
+              # Manual dispatch without inputs - use current version from pyproject.toml
+              echo "Warning: workflow_dispatch executed without inputs. Using current version from pyproject.toml"
+              CURRENT_VERSION=$(grep -E '^version\s*=' pyproject.toml | sed -E 's/version\s*=\s*["'\'']([^"'\'']+)["'\'']/\1/')
+              
+              if [[ "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                NEW_VERSION="$CURRENT_VERSION"
+                OLD_VERSION="$CURRENT_VERSION"
+                SHOULD_RELEASE="true"
+                IS_SEMANTIC="true"
+                echo "Using current version for release: $CURRENT_VERSION"
+              else
+                echo "Error: Current version '$CURRENT_VERSION' does not follow semantic versioning (X.Y.Z)"
+                echo "Please specify a valid version using 'version' input or 'release_type' input"
+                exit 1
+              fi
             fi
           else
             # Automatic trigger on push

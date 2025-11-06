@@ -1,108 +1,107 @@
-# GitHub Actions 환경 설정 가이드
+# GitHub Actions Environment Setup Guide
 
-이 문서는 GitHub Actions 워크플로우가 정상 작동하기 위해 필요한 설정을 설명합니다.
+This document explains the configuration required for GitHub Actions workflows to function properly.
 
-## 필요한 환경 변수 및 Secrets
+## Required Environment Variables and Secrets
 
-### 자동으로 사용 가능한 Secrets
+### Automatically Available Secrets
 
-다음 secrets는 GitHub에서 자동으로 제공되며 **추가 설정이 필요 없습니다**:
+The following secrets are automatically provided by GitHub and **require no additional setup**:
 
-- ✅ `GITHUB_TOKEN` - 브랜치 생성, 커밋, PR 생성, GitHub Release 생성에 사용 (자동 제공)
+- ✅ `GITHUB_TOKEN` - Used for branch creation, commits, PR creation, and GitHub Release creation (automatically provided)
 
-### PyPI 배포를 위한 필수 Secrets
+### Required Secrets for PyPI Deployment
 
-`pypi-release.yml` 워크플로우를 사용하려면 다음 Secrets를 **반드시 설정**해야 합니다:
+The following Secrets **must be configured** to use the `pypi-release.yml` workflow:
 
-| Secret 이름          | 설명                              | 필수 여부 | 설정 위치                    |
-| -------------------- | --------------------------------- | --------- | ---------------------------- |
-| `PYPI_API_TOKEN`     | PyPI API 토큰 (실제 PyPI 배포용)  | ✅ 필수    | Settings → Secrets → Actions |
-| `TESTPYPI_API_TOKEN` | TestPyPI API 토큰 (테스트 배포용) | ✅ 필수    | Settings → Secrets → Actions |
+| Secret Name          | Description                              | Required | Setup Location                    |
+| -------------------- | ---------------------------------------- | -------- | --------------------------------- |
+| `PYPI_API_TOKEN`     | PyPI API token (for production PyPI)     | ✅ Required | Settings → Secrets → Actions |
+| `TESTPYPI_API_TOKEN` | TestPyPI API token (for test deployment) | ✅ Required | Settings → Secrets → Actions |
 
-**설정 방법:**
-1. GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions**
-2. "New repository secret" 클릭
-3. Name에 `PYPI_API_TOKEN` 또는 `TESTPYPI_API_TOKEN` 입력
-4. Value에 해당 API 토큰 입력 (`pypi-`로 시작하는 전체 문자열)
-5. "Add secret" 클릭
+**Setup Instructions:**
+1. Go to GitHub repository → **Settings** → **Secrets and variables** → **Actions**
+2. Click "New repository secret"
+3. Enter `PYPI_API_TOKEN` or `TESTPYPI_API_TOKEN` in the Name field
+4. Enter the corresponding API token in the Value field (full string starting with `pypi-`)
+5. Click "Add secret"
 
-**토큰 생성 방법:**
-- **PyPI 토큰**: https://pypi.org/manage/account/token/
-- **TestPyPI 토큰**: https://test.pypi.org/manage/account/token/
-- Scope: "Entire account" 선택
+**Token Creation:**
+- **PyPI Token**: https://pypi.org/manage/account/token/
+- **TestPyPI Token**: https://test.pypi.org/manage/account/token/
+- Scope: Select "Entire account"
 
-### 선택적 Secrets (알림 통합 등)
+### Optional Secrets (Notification Integration, etc.)
 
-워크플로우를 확장하여 다음 기능을 추가할 경우:
+For extending workflows with additional features:
 
-### Slack/Discord 알림 (선택사항)
+### Slack/Discord Notifications (Optional)
 
-배포 완료 시 알림을 받고 싶다면:
+To receive notifications when deployment completes:
 
-| Secret 이름           | 설명                       |
-| --------------------- | -------------------------- |
-| `SLACK_WEBHOOK_URL`   | Slack Incoming Webhook URL |
-| `DISCORD_WEBHOOK_URL` | Discord Webhook URL        |
+| Secret Name           | Description                       |
+| --------------------- | --------------------------------- |
+| `SLACK_WEBHOOK_URL`   | Slack Incoming Webhook URL        |
+| `DISCORD_WEBHOOK_URL` | Discord Webhook URL               |
 
-## 워크플로우 권한 확인
+## Workflow Permissions
 
-워크플로우가 정상 작동하려면 다음 권한이 필요합니다:
+The following permissions are required for workflows to function:
 
-- ✅ `contents: read` - 코드 읽기 (`pypi-release.yml`에 포함됨)
-- ✅ `contents: write` - GitHub Release 생성 (`pypi-release.yml`에 포함됨)
+- ✅ `contents: read` - Read code (included in `pypi-release.yml`)
+- ✅ `contents: write` - Create GitHub Release (included in `pypi-release.yml`)
 
-## 워크플로우 테스트
+## Workflow Testing
 
-워크플로우가 정상 작동하는지 테스트하려면:
+To test if workflows are functioning correctly:
 
-1. **수동 실행 테스트 (PyPI Release):**
-   - GitHub 저장소 → Actions 탭
-   - "PyPI Release" 선택
-   - "Run workflow" 클릭
-   - Release type 선택 (patch/minor/major) 또는 버전 직접 입력
-   - 실행
+1. **Manual Execution Test (PyPI Release):**
+   - Go to GitHub repository → Actions tab
+   - Select "PyPI Release"
+   - Click "Run workflow"
+   - Select release type (patch/minor/major) or enter version directly
+   - Execute
 
-2. **자동 트리거 테스트 (Semantic Version 변경):**
+2. **Automatic Trigger Test (Semantic Version Change):**
    ```bash
-   # pyproject.toml에서 Semantic Version으로 변경
-   # 예: 0.1.0 → 0.1.1
+   # Change to Semantic Version in pyproject.toml
+   # Example: 0.1.0 → 0.1.1
    git add pyproject.toml
    git commit -m "chore: Bump version to 0.1.1"
    git push origin main
    
-   # 워크플로우가 자동으로 실행되어 PyPI에 배포됨
+   # Workflow automatically runs and deploys to PyPI
    ```
 
-## 문제 해결
+## Troubleshooting
 
-### 워크플로우가 실행되지 않는 경우
+### Workflow Not Running
 
-1. **GitHub Actions 활성화 확인**
+1. **GitHub Actions Enabled**
    - Settings → Actions → General
-   - "Allow all actions and reusable workflows" 선택
+   - Select "Allow all actions and reusable workflows"
 
-2. **워크플로우 파일 위치 확인**
-   - `.github/workflows/pypi-release.yml` 경로가 정확한지 확인
+2. **Workflow File Location**
+   - Verify `.github/workflows/pypi-release.yml` path is correct
 
-3. **브랜치 보호 규칙 확인**
+3. **Branch Protection Rules**
    - Settings → Branches
-   - `main` 브랜치에 워크플로우 실행을 제한하는 규칙이 있는지 확인
+   - Check if there are any rules restricting workflow execution on `main` branch
 
-### 권한 오류 발생 시
+### Permission Errors
 
-- 워크플로우의 `permissions` 섹션 확인
-- 저장소 Settings → Actions → General → "Workflow permissions" 확인
+- Check the `permissions` section in the workflow
+- Verify repository Settings → Actions → General → "Workflow permissions"
 
-### 배포가 실패하는 경우
+### Deployment Failure
 
-- Semantic Version 형식인지 확인 (X.Y.Z)
-- `PYPI_API_TOKEN`, `TESTPYPI_API_TOKEN` Secret이 올바르게 설정되었는지 확인
-- GitHub Actions 로그 확인 (Actions 탭에서 실행 결과 클릭)
-- 테스트가 모두 통과하는지 확인
+- Verify Semantic Version format (X.Y.Z)
+- Verify `PYPI_API_TOKEN`, `TESTPYPI_API_TOKEN` Secrets are correctly configured
+- Check GitHub Actions logs (click on execution result in Actions tab)
+- Verify all tests pass
 
-## 참고 자료
+## Reference Materials
 
-- [GitHub Actions 문서](https://docs.github.com/en/actions)
-- [GitHub Secrets 관리](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
-- [peter-evans/create-pull-request 액션](https://github.com/peter-evans/create-pull-request)
-
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [GitHub Secrets Management](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
+- [softprops/action-gh-release](https://github.com/softprops/action-gh-release)

@@ -165,8 +165,10 @@ jobs:
           python-version: '3.11'
 
       - name: Install and setup rye
+        env:
+          RYE_INSTALL_OPTION: --yes
         run: |
-          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null
+          curl -sSf https://rye.astral.sh/get | bash < /dev/null
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
           # Setup rye environment for subsequent steps
           if [ -f "$HOME/.rye/env" ]; then
@@ -212,8 +214,10 @@ jobs:
           python-version: '3.11'
 
       - name: Install and setup rye
+        env:
+          RYE_INSTALL_OPTION: --yes
         run: |
-          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null
+          curl -sSf https://rye.astral.sh/get | bash < /dev/null
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
           if [ -f "$HOME/.rye/env" ]; then
             cat "$HOME/.rye/env" >> $GITHUB_ENV
@@ -251,8 +255,10 @@ jobs:
           python-version: '3.11'
 
       - name: Install and setup rye
+        env:
+          RYE_INSTALL_OPTION: --yes
         run: |
-          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null
+          curl -sSf https://rye.astral.sh/get | bash < /dev/null
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
           if [ -f "$HOME/.rye/env" ]; then
             cat "$HOME/.rye/env" >> $GITHUB_ENV

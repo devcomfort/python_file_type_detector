@@ -166,7 +166,7 @@ jobs:
 
       - name: Install rye
         run: |
-          curl -sSf https://rye.astral.sh/get | bash
+          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null || curl -sSf https://rye.astral.sh/get | bash < /dev/null
           export PATH="$HOME/.rye/shims:$PATH"
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
           
@@ -231,7 +231,7 @@ jobs:
 
       - name: Install rye
         run: |
-          curl -sSf https://rye.astral.sh/get | bash
+          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null || curl -sSf https://rye.astral.sh/get | bash < /dev/null
           export PATH="$HOME/.rye/shims:$PATH"
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
 
@@ -282,7 +282,7 @@ jobs:
 
       - name: Install rye
         run: |
-          curl -sSf https://rye.astral.sh/get | bash
+          curl -sSf https://rye.astral.sh/get | bash -s -- --yes < /dev/null || curl -sSf https://rye.astral.sh/get | bash < /dev/null
           export PATH="$HOME/.rye/shims:$PATH"
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
 

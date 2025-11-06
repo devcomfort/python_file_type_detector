@@ -1,0 +1,229 @@
+name: PyPI Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type (patch/minor/major)'
+        required: false
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      version:
+        description: 'Specific version to release (e.g., 0.1.1)'
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+    paths:
+      - 'pyproject.toml'
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.check.outputs.should_release }}
+      new-version: ${{ steps.check.outputs.new_version }}
+      old-version: ${{ steps.check.outputs.old_version }}
+      is-semantic: ${{ steps.check.outputs.is_semantic }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check version and determine if should release
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if [ -n "${{ github.event.inputs.version }}" ]; then
+              # Manual dispatch with specific version
+              NEW_VERSION="${{ github.event.inputs.version }}"
+              OLD_VERSION=$(grep -E '^version\s*=' pyproject.toml | sed -E 's/version\s*=\s*["'\'']([^"'\'']+)["'\'']/\1/')
+              
+              # Validate semantic version format
+              if [[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo "should_release=true" >> $GITHUB_OUTPUT
+                echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+                echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
+                echo "is_semantic=true" >> $GITHUB_OUTPUT
+              else
+                echo "should_release=false" >> $GITHUB_OUTPUT
+                echo "is_semantic=false" >> $GITHUB_OUTPUT
+                echo "Error: Version must follow semantic versioning (X.Y.Z)"
+                exit 1
+              fi
+            elif [ -n "${{ github.event.inputs.release_type }}" ]; then
+              # Manual dispatch with release type
+              RELEASE_TYPE="${{ github.event.inputs.release_type }}"
+              CURRENT_VERSION=$(grep -E '^version\s*=' pyproject.toml | sed -E 's/version\s*=\s*["'\'']([^"'\'']+)["'\'']/\1/')
+              
+              IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+              MAJOR=${VERSION_PARTS[0]}
+              MINOR=${VERSION_PARTS[1]}
+              PATCH=${VERSION_PARTS[2]}
+              
+              case "$RELEASE_TYPE" in
+                major)
+                  MAJOR=$((MAJOR + 1))
+                  MINOR=0
+                  PATCH=0
+                  ;;
+                minor)
+                  MINOR=$((MINOR + 1))
+                  PATCH=0
+                  ;;
+                patch)
+                  PATCH=$((PATCH + 1))
+                  ;;
+              esac
+              
+              NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+              echo "should_release=true" >> $GITHUB_OUTPUT
+              echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+              echo "old_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+              echo "is_semantic=true" >> $GITHUB_OUTPUT
+            else
+              echo "should_release=false" >> $GITHUB_OUTPUT
+              echo "is_semantic=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            # Automatic trigger on push
+            if git diff HEAD~1 HEAD --name-only | grep -q "^pyproject.toml$"; then
+              OLD_VERSION=$(git show HEAD~1:pyproject.toml | grep -E '^version\s*=' | sed -E 's/version\s*=\s*["'\'']([^"'\'']+)["'\'']/\1/')
+              NEW_VERSION=$(grep -E '^version\s*=' pyproject.toml | sed -E 's/version\s*=\s*["'\'']([^"'\'']+)["'\'']/\1/')
+              
+              if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
+                # Validate semantic version format (X.Y.Z)
+                if [[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                  echo "should_release=true" >> $GITHUB_OUTPUT
+                  echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+                  echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
+                  echo "is_semantic=true" >> $GITHUB_OUTPUT
+                  echo "Semantic version detected: $OLD_VERSION -> $NEW_VERSION"
+                else
+                  echo "should_release=false" >> $GITHUB_OUTPUT
+                  echo "is_semantic=false" >> $GITHUB_OUTPUT
+                  echo "Warning: Version $NEW_VERSION does not follow semantic versioning (X.Y.Z format)"
+                fi
+              else
+                echo "should_release=false" >> $GITHUB_OUTPUT
+                echo "is_semantic=false" >> $GITHUB_OUTPUT
+              fi
+            else
+              echo "should_release=false" >> $GITHUB_OUTPUT
+              echo "is_semantic=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  build-and-test:
+    needs: check-version
+    if: needs.check-version.outputs.should-release == 'true' && needs.check-version.outputs.is-semantic == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install rye
+        uses: rye/setup-rye@v1
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          rye sync
+
+      - name: Run tests
+        run: |
+          rye run pytest tests/ -v
+
+      - name: Build package
+        run: |
+          rye run python -m build
+
+      - name: Check package
+        run: |
+          rye run twine check dist/*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-packages
+          path: dist/*
+          retention-days: 1
+
+  release-to-testpypi:
+    needs: [check-version, build-and-test]
+    if: needs.check-version.outputs.should-release == 'true' && needs.check-version.outputs.is-semantic == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-packages
+          path: dist/
+
+      - name: Publish to TestPyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TESTPYPI_API_TOKEN }}
+        run: |
+          rye run twine upload --repository testpypi dist/* --verbose
+
+      - name: Verify TestPyPI installation
+        run: |
+          pip install --index-url https://test.pypi.org/simple/ --no-deps filetype-detector==${{ needs.check-version.outputs.new-version }} || true
+
+  release-to-pypi:
+    needs: [check-version, build-and-test, release-to-testpypi]
+    if: needs.check-version.outputs.should-release == 'true' && needs.check-version.outputs.is-semantic == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-packages
+          path: dist/
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          rye run twine upload dist/* --verbose
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.check-version.outputs.new-version }}
+          name: Release v${{ needs.check-version.outputs.new-version }}
+          body: |
+            ## Release v${{ needs.check-version.outputs.new-version }}
+
+            Auto-generated release after version bump from ${{ needs.check-version.outputs.old-version }}.
+
+            ### Changes
+            - Version updated: ${{ needs.check-version.outputs.old-version }} → ${{ needs.check-version.outputs.new-version }}
+            - Package published to PyPI
+
+            ### Installation
+            ```bash
+            pip install filetype-detector==${{ needs.check-version.outputs.new-version }}
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

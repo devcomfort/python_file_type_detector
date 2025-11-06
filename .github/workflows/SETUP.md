@@ -8,11 +8,28 @@
 
 다음 secrets는 GitHub에서 자동으로 제공되며 **추가 설정이 필요 없습니다**:
 
-- ✅ `GITHUB_TOKEN` - 브랜치 생성, 커밋, PR 생성에 사용 (자동 제공)
+- ✅ `GITHUB_TOKEN` - 브랜치 생성, 커밋, PR 생성, GitHub Release 생성에 사용 (자동 제공)
 
-### 추가 설정이 필요한 경우
+### PyPI 배포를 위한 필수 Secrets
 
-현재 워크플로우는 기본 `GITHUB_TOKEN`만 사용하므로 **추가 환경 변수 설정이 필요 없습니다**.
+`pypi-release.yml` 워크플로우를 사용하려면 다음 Secrets를 **반드시 설정**해야 합니다:
+
+| Secret 이름          | 설명                              | 필수 여부 | 설정 위치                    |
+| -------------------- | --------------------------------- | --------- | ---------------------------- |
+| `PYPI_API_TOKEN`     | PyPI API 토큰 (실제 PyPI 배포용)  | ✅ 필수    | Settings → Secrets → Actions |
+| `TESTPYPI_API_TOKEN` | TestPyPI API 토큰 (테스트 배포용) | ✅ 필수    | Settings → Secrets → Actions |
+
+**설정 방법:**
+1. GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions**
+2. "New repository secret" 클릭
+3. Name에 `PYPI_API_TOKEN` 또는 `TESTPYPI_API_TOKEN` 입력
+4. Value에 해당 API 토큰 입력 (`pypi-`로 시작하는 전체 문자열)
+5. "Add secret" 클릭
+
+**토큰 생성 방법:**
+- **PyPI 토큰**: https://pypi.org/manage/account/token/
+- **TestPyPI 토큰**: https://test.pypi.org/manage/account/token/
+- Scope: "Entire account" 선택
 
 ## 향후 확장 시 필요한 Secrets
 
@@ -22,9 +39,9 @@
 
 만약 자동으로 PyPI 배포까지 포함하고 싶다면:
 
-| Secret 이름 | 설명 | 예시 |
-|------------|------|------|
-| `PYPI_API_TOKEN` | PyPI API 토큰 | `pypi-AgEIcHlwaS5...` |
+| Secret 이름          | 설명              | 예시                  |
+| -------------------- | ----------------- | --------------------- |
+| `PYPI_API_TOKEN`     | PyPI API 토큰     | `pypi-AgEIcHlwaS5...` |
 | `TESTPYPI_API_TOKEN` | TestPyPI API 토큰 | `pypi-AgENdGVzdC5...` |
 
 **설정 방법:**
@@ -40,10 +57,10 @@
 
 PR 생성 시 알림을 받고 싶다면:
 
-| Secret 이름 | 설명 |
-|------------|------|
-| `SLACK_WEBHOOK_URL` | Slack Incoming Webhook URL |
-| `DISCORD_WEBHOOK_URL` | Discord Webhook URL |
+| Secret 이름           | 설명                       |
+| --------------------- | -------------------------- |
+| `SLACK_WEBHOOK_URL`   | Slack Incoming Webhook URL |
+| `DISCORD_WEBHOOK_URL` | Discord Webhook URL        |
 
 ## 워크플로우 권한 확인
 

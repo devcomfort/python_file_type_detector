@@ -144,18 +144,11 @@ jobs:
           echo "  old-version: ${{ steps.check.outputs.old_version }}"
           echo "  is-semantic: ${{ steps.check.outputs.is_semantic }}"
 
-  build-and-test:
+  build-test-release:
     needs: check-version
     if: needs.check-version.outputs.should-release == 'true' && needs.check-version.outputs.is-semantic == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Debug check-version outputs
-        run: |
-          echo "Received outputs from check-version:"
-          echo "  should-release: '${{ needs.check-version.outputs.should-release }}'"
-          echo "  is-semantic: '${{ needs.check-version.outputs.is-semantic }}'"
-          echo "  new-version: '${{ needs.check-version.outputs.new-version }}'"
-          echo "  old-version: '${{ needs.check-version.outputs.old-version }}'"
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -183,40 +176,6 @@ jobs:
       - name: Check package
         run: $HOME/.rye/shims/rye run twine check dist/*
 
-
-  release-to-testpypi:
-    needs: [check-version, build-and-test]
-    if: needs.check-version.outputs.should-release == 'true' && needs.check-version.outputs.is-semantic == 'true'
-    runs-on: ubuntu-latest
-    environment:
-      name: testpypi
-    steps:
-      - name: Debug check-version outputs
-        run: |
-          echo "Received outputs from check-version:"
-          echo "  should-release: '${{ needs.check-version.outputs.should-release }}'"
-          echo "  is-semantic: '${{ needs.check-version.outputs.is-semantic }}'"
-          echo "  new-version: '${{ needs.check-version.outputs.new-version }}'"
-          echo "  old-version: '${{ needs.check-version.outputs.old-version }}'"
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install rye
-        env:
-          RYE_INSTALL_OPTION: --yes
-        run: curl -sSf https://rye.astral.sh/get | bash < /dev/null
-
-      - name: Install dependencies
-        run: $HOME/.rye/shims/rye sync
-
-      - name: Build package
-        run: $HOME/.rye/shims/rye run python -m build
-
       - name: Publish to TestPyPI
         env:
           TWINE_USERNAME: __token__
@@ -226,32 +185,6 @@ jobs:
       - name: Verify TestPyPI installation
         run: |
           pip install --index-url https://test.pypi.org/simple/ --no-deps filetype-detector==${{ needs.check-version.outputs.new-version }} || true
-
-  release-to-pypi:
-    needs: [check-version, build-and-test, release-to-testpypi]
-    if: needs.check-version.outputs.should-release == 'true' && needs.check-version.outputs.is-semantic == 'true'
-    runs-on: ubuntu-latest
-    environment:
-      name: pypi
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install rye
-        env:
-          RYE_INSTALL_OPTION: --yes
-        run: curl -sSf https://rye.astral.sh/get | bash < /dev/null
-
-      - name: Install dependencies
-        run: $HOME/.rye/shims/rye sync
-
-      - name: Build package
-        run: $HOME/.rye/shims/rye run python -m build
 
       - name: Publish to PyPI
         env:

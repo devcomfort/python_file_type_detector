@@ -53,7 +53,9 @@ class TestLexicalInferencer:
         ]
         for input_path, expected in test_cases:
             result = inferencer.infer(input_path)
-            logger.debug(f"Input: {input_path} -> Result: {result}, Expected: {expected}")
+            logger.debug(
+                f"Input: {input_path} -> Result: {result}, Expected: {expected}"
+            )
             assert result == expected
         logger.success("Case-insensitive test passed")
 
@@ -96,4 +98,3 @@ class TestLexicalInferencer:
         logger.info(f"Dot-only test - Results: '{result1}', '{result2}'")
         assert result1 == ""
         assert result2 == ""
-

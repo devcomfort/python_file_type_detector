@@ -16,7 +16,9 @@ class TestMagicInferencer:
         logger.debug(f"Testing string path inference with file: {sample_text_file}")
         inferencer = MagicInferencer()
         extension = inferencer.infer(str(sample_text_file))
-        logger.success(f"String path test - File: {sample_text_file.name}, Extension: {extension}")
+        logger.success(
+            f"String path test - File: {sample_text_file.name}, Extension: {extension}"
+        )
         assert extension == ".txt"
         assert extension.startswith(".")
 
@@ -25,7 +27,9 @@ class TestMagicInferencer:
         logger.debug(f"Testing Path object inference with file: {sample_text_file}")
         inferencer = MagicInferencer()
         extension = inferencer.infer(sample_text_file)
-        logger.success(f"Path object test - File: {sample_text_file.name}, Extension: {extension}")
+        logger.success(
+            f"Path object test - File: {sample_text_file.name}, Extension: {extension}"
+        )
         assert extension == ".txt"
 
     def test_infer_file_not_found_error(self):
@@ -50,7 +54,9 @@ class TestMagicInferencer:
         logger.debug("Testing RuntimeError when MIME type cannot be determined")
         mock_magic.return_value = None
         inferencer = MagicInferencer()
-        with pytest.raises(RuntimeError, match="Cannot determine MIME type") as exc_info:
+        with pytest.raises(
+            RuntimeError, match="Cannot determine MIME type"
+        ) as exc_info:
             inferencer.infer(sample_text_file)
         logger.success(f"RuntimeError correctly raised: {exc_info.value}")
 
@@ -108,4 +114,3 @@ class TestMagicInferencer:
         assert extension == ".txt"
         mock_magic.assert_called_once_with(str(sample_text_file), mime=True)
         logger.debug("Mock verification passed")
-

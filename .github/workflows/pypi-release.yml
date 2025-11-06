@@ -157,6 +157,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libmagic1
+
       - name: Install rye
         env:
           RYE_INSTALL_OPTION: --yes

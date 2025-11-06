@@ -162,25 +162,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libmagic1
 
-      - name: Install rye
-        run: curl -sSf https://rye.astral.sh/get | bash -s -- --yes
-
-      - name: Load rye environment
-        run: |
-          if [ -f "$HOME/.rye/env" ]; then
-            # Source rye env file to get PATH and other environment variables
-            source "$HOME/.rye/env"
-            # Add rye shims to PATH for subsequent steps
-            echo "$HOME/.rye/shims" >> $GITHUB_PATH
-            # Export updated PATH for subsequent steps
-            echo "PATH=$PATH" >> $GITHUB_ENV
-          else
-            # Fallback: add shims to PATH if env file doesn't exist
-            echo "$HOME/.rye/shims" >> $GITHUB_PATH
-          fi
-
-      - name: Verify rye installation
-        run: rye --version
+      - name: Setup Rye
+        uses: eifinger/setup-rye@v4
 
       - name: Install dependencies
         run: rye sync

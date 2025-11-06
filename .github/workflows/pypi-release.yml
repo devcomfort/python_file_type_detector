@@ -181,18 +181,7 @@ jobs:
           if [ -f "$HOME/.rye/env" ]; then
             source "$HOME/.rye/env"
           fi
-          rye sync || $HOME/.rye/shims/rye sync
-
-      - name: Install build and test dependencies manually
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          if [ -f "$HOME/.rye/env" ]; then
-            source "$HOME/.rye/env"
-          fi
-          # Activate rye virtual environment and install tools
-          source .venv/bin/activate || true
-          python3.11 -m pip install --upgrade pip
-          python3.11 -m pip install pytest>=8.4.2 build>=1.3.0 twine>=6.2.0
+          rye sync
 
       - name: Run tests
         run: |
@@ -200,8 +189,7 @@ jobs:
           if [ -f "$HOME/.rye/env" ]; then
             source "$HOME/.rye/env"
           fi
-          source .venv/bin/activate || true
-          pytest tests/ -v || python3.11 -m pytest tests/ -v
+          rye run pytest tests/ -v
 
       - name: Build package
         run: |
@@ -209,8 +197,7 @@ jobs:
           if [ -f "$HOME/.rye/env" ]; then
             source "$HOME/.rye/env"
           fi
-          source .venv/bin/activate || true
-          python3.11 -m build || python -m build
+          rye run python -m build
 
       - name: Check package
         run: |
@@ -218,8 +205,7 @@ jobs:
           if [ -f "$HOME/.rye/env" ]; then
             source "$HOME/.rye/env"
           fi
-          source .venv/bin/activate || true
-          twine check dist/* || python3.11 -m twine check dist/*
+          rye run twine check dist/*
 
 
   release-to-testpypi:
@@ -256,13 +242,7 @@ jobs:
           if [ -f "$HOME/.rye/env" ]; then
             source "$HOME/.rye/env"
           fi
-          rye sync || $HOME/.rye/shims/rye sync
-
-      - name: Install build dependencies manually
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          source .venv/bin/activate || true
-          python3.11 -m pip install --upgrade pip build>=1.3.0 twine>=6.2.0
+          rye sync
 
       - name: Build package
         run: |
@@ -270,8 +250,7 @@ jobs:
           if [ -f "$HOME/.rye/env" ]; then
             source "$HOME/.rye/env"
           fi
-          source .venv/bin/activate || true
-          python3.11 -m build || python -m build
+          rye run python -m build
 
       - name: Publish to TestPyPI
         env:
@@ -282,8 +261,7 @@ jobs:
           if [ -f "$HOME/.rye/env" ]; then
             source "$HOME/.rye/env"
           fi
-          source .venv/bin/activate || true
-          twine upload --repository testpypi dist/* --verbose || python3.11 -m twine upload --repository testpypi dist/* --verbose
+          rye run twine upload --repository testpypi dist/* --verbose
 
       - name: Verify TestPyPI installation
         run: |
@@ -316,13 +294,7 @@ jobs:
           if [ -f "$HOME/.rye/env" ]; then
             source "$HOME/.rye/env"
           fi
-          rye sync || $HOME/.rye/shims/rye sync
-
-      - name: Install build dependencies manually
-        run: |
-          export PATH="$HOME/.rye/shims:$PATH"
-          source .venv/bin/activate || true
-          python3.11 -m pip install --upgrade pip build>=1.3.0 twine>=6.2.0
+          rye sync
 
       - name: Build package
         run: |
@@ -330,8 +302,7 @@ jobs:
           if [ -f "$HOME/.rye/env" ]; then
             source "$HOME/.rye/env"
           fi
-          source .venv/bin/activate || true
-          python3.11 -m build || python -m build
+          rye run python -m build
 
       - name: Publish to PyPI
         env:
@@ -342,8 +313,7 @@ jobs:
           if [ -f "$HOME/.rye/env" ]; then
             source "$HOME/.rye/env"
           fi
-          source .venv/bin/activate || true
-          twine upload dist/* --verbose || python3.11 -m twine upload dist/* --verbose
+          rye run twine upload dist/* --verbose
 
       - name: Install GitHub CLI
         run: |

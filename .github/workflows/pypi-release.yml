@@ -167,9 +167,16 @@ jobs:
 
       - name: Load rye environment
         run: |
-          echo "$HOME/.rye/shims" >> $GITHUB_PATH
           if [ -f "$HOME/.rye/env" ]; then
-            cat "$HOME/.rye/env" >> $GITHUB_ENV
+            # Source rye env file to get PATH and other environment variables
+            source "$HOME/.rye/env"
+            # Add rye shims to PATH for subsequent steps
+            echo "$HOME/.rye/shims" >> $GITHUB_PATH
+            # Export updated PATH for subsequent steps
+            echo "PATH=$PATH" >> $GITHUB_ENV
+          else
+            # Fallback: add shims to PATH if env file doesn't exist
+            echo "$HOME/.rye/shims" >> $GITHUB_PATH
           fi
 
       - name: Verify rye installation
